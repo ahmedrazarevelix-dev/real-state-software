@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # ════════════════════════════════════════════════════════════════════════════
+  # PostgreSQL Database
+  # ════════════════════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:16-alpine
+    container_name: bms-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-auth_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bms-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # BMS Application
+  # ════════════════════════════════════════════════════════════════════════════
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bms-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-auth_db}?schema=public
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      ACCESS_TOKEN_EXPIRY: ${ACCESS_TOKEN_EXPIRY:-15m}
+      REFRESH_TOKEN_EXPIRY: ${REFRESH_TOKEN_EXPIRY:-7d}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES:-10}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      GMAIL_USER: ${GMAIL_USER}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bms-network
+    volumes:
+      # Mount logs directory (optional)
+      - ./logs:/app/logs
+    command: sh -c "npx prisma migrate deploy && npm start"
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Redis (Optional - for caching/session management)
+  # ════════════════════════════════════════════════════════════════════════════
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: bms-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - bms-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Networks
+# ══════════════════════════════════════════════════════════════════════════════
+networks:
+  bms-network:
+    driver: bridge
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Volumes
+# ══════════════════════════════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    driver: local
+  # redis_data:
+  #   driver: local

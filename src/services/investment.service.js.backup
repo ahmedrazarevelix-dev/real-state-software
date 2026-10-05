@@ -1,0 +1,771 @@
+const prisma = require("../config/prisma.client");
+const ApiError = require("../utils/ApiError");
+
+class InvestmentService {
+    
+    // ══════════════════════════════════════════════════════════════════════════
+    // LISTING MANAGEMENT
+    // ══════════════════════════════════════════════════════════════════════════
+    
+    // ── CREATE LISTING ───────────────────────────────────────────────────────
+    
+    async createListing(reqBody, userRole, userId) {
+        const { unitId, listedPrice, brokerId, description, features, expiryDate } = reqBody;
+
+        const unit = await prisma.unit.findUnique({
+            where: { id: unitId },
+            include: {
+                building: {
+                    select: {
+                        adminId: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        if (!unit) {
+            throw new ApiError(404, "Unit not found");
+        }
+
+        // ✅ IMPORTANT: Admin can only list THEIR units
+        if (userRole === 'admin' && unit.building.adminId !== userId) {
+            throw new ApiError(403, "You can only create listings for units in your own buildings");
+        }
+
+        // Check if unit is already listed
+        const existingListing = await prisma.investmentListing.findFirst({
+            where: {
+                unitId,
+                status: { in: ['active', 'under_negotiation', 'offer_received'] },
+            },
+        });
+
+        if (existingListing) {
+            throw new ApiError(400, "Unit is already listed for sale");
+        }
+
+        // If broker specified, verify they exist and have broker role
+        if (brokerId) {
+            const broker = await prisma.user.findUnique({
+                where: { id: brokerId },
+                include: { userRole: { include: { role: true } } },
+            });
+
+            if (!broker) {
+                throw new ApiError(404, "Broker not found");
+            }
+
+            const brokerRole = broker.userRole?.role?.roleName;
+            if (brokerRole !== 'broker' && brokerRole !== 'invitor') {
+                throw new ApiError(400, "User must have 'broker' or 'invitor' role");
+            }
+
+            if (broker.status !== 'active') {
+                throw new ApiError(400, `Broker account is ${broker.status}`);
+            }
+        }
+
+        // Create listing and update unit status in transaction
+        const listing = await prisma.$transaction(async (tx) => {
+            const newListing = await tx.investmentListing.create({
+                data: {
+                    unitId,
+                    listedPrice,
+                    brokerId: brokerId || null,
+                    description: description || null,
+                    features: features || null,
+                    expiryDate: expiryDate ? new Date(expiryDate) : null,
+                },
+                include: {
+                    unit: {
+                        include: {
+                            building: {
+                                select: {
+                                    name: true,
+                                    address: true,
+                                    adminId: true,
+                                },
+                            },
+                        },
+                    },
+                    broker: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                },
+            });
+
+            await tx.unit.update({
+                where: { id: unitId },
+                data: { status: 'for_sale' },
+            });
+
+            return newListing;
+        });
+
+        return listing;
+    }
+
+    // ── GET ACTIVE LISTINGS ──────────────────────────────────────────────────
+    
+    async getActiveListings(userRole, userId) {
+        let whereClause = { status: 'active' };
+
+        // ✅ Admin sees only THEIR building listings
+        if (userRole === 'admin') {
+            whereClause = {
+                ...whereClause,
+                unit: {
+                    building: {
+                        adminId: userId,
+                    },
+                },
+            };
+        }
+
+        // ✅ Super admin, tenant, broker, invitor see ALL active listings (marketplace)
+        
+        const listings = await prisma.investmentListing.findMany({
+            where: whereClause,
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                name: true,
+                                address: true,
+                            },
+                        },
+                    },
+                },
+                broker: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                _count: {
+                    select: { visits: true, bids: true },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return listings;
+    }
+
+    // ── GET LISTING BY ID ────────────────────────────────────────────────────
+    
+    async getListingById(listingId) {
+        const listing = await prisma.investmentListing.findUnique({
+            where: { id: listingId },
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                name: true,
+                                address: true,
+                            },
+                        },
+                    },
+                },
+                broker: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                visits: {
+                    include: {
+                        broker: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                    orderBy: { visitDate: 'desc' },
+                },
+            },
+        });
+
+        if (!listing) {
+            throw new ApiError(404, "Listing not found");
+        }
+
+        return listing;
+    }
+
+    // ── UPDATE LISTING ────────────────────────────────────────────────────────
+    
+    async updateListing(listingId, reqBody, userRole, userId) {
+        const listing = await prisma.investmentListing.findUnique({
+            where: { id: listingId },
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                adminId: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!listing) {
+            throw new ApiError(404, "Listing not found");
+        }
+
+        // Check authorization
+        if (userRole === "admin" && listing.unit.building.adminId !== userId) {
+            throw new ApiError(403, "You can only update listings for your own properties");
+        }
+
+        const updatedListing = await prisma.investmentListing.update({
+            where: { id: listingId },
+            data: reqBody,
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                name: true,
+                                address: true,
+                            },
+                        },
+                    },
+                },
+                broker: {
+                    select: {
+                        name: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        visits: true,
+                        bids: true,
+                    },
+                },
+            },
+        });
+
+        return updatedListing;
+    }
+
+    // ── INCREMENT VIEW COUNT ──────────────────────────────────────────────────
+    
+    async incrementViewCount(listingId) {
+        await prisma.investmentListing.update({
+            where: { id: listingId },
+            data: {
+                viewCount: {
+                    increment: 1,
+                },
+            },
+        });
+    }
+
+    // ── GET LISTING ANALYTICS ─────────────────────────────────────────────────
+    
+    async getListingAnalytics(listingId, userRole, userId) {
+        const listing = await prisma.investmentListing.findUnique({
+            where: { id: listingId },
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                adminId: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!listing) {
+            throw new ApiError(404, "Listing not found");
+        }
+
+        // Check authorization
+        if (userRole === "admin" && listing.unit.building.adminId !== userId) {
+            throw new ApiError(403, "You can only view analytics for your own listings");
+        }
+
+        // Get analytics data
+        const [totalVisits, totalBids, avgBidAmount, highestBid, interestedVisitors] = await Promise.all([
+            prisma.propertyVisit.count({ where: { listingId } }),
+            prisma.bid.count({ where: { listingId } }),
+            prisma.bid.aggregate({
+                where: { listingId },
+                _avg: { bidAmount: true },
+            }),
+            prisma.bid.findFirst({
+                where: { listingId },
+                orderBy: { bidAmount: "desc" },
+                select: { bidAmount: true },
+            }),
+            prisma.propertyVisit.count({
+                where: {
+                    listingId,
+                    status: { in: ["interested", "converted_to_offer"] },
+                },
+            }),
+        ]);
+
+        const analytics = {
+            listingId: listing.id,
+            listedPrice: listing.listedPrice,
+            viewCount: listing.viewCount,
+            totalVisits,
+            totalBids,
+            avgBidAmount: avgBidAmount._avg.bidAmount || 0,
+            highestBid: highestBid?.bidAmount || 0,
+            interestedVisitors,
+            conversionRate: totalVisits > 0 ? ((totalBids / totalVisits) * 100).toFixed(2) : 0,
+            daysOnMarket: Math.floor(
+                (new Date() - listing.listingDate) / (1000 * 60 * 60 * 24)
+            ),
+        };
+
+        return analytics;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // PROPERTY VISITS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    // ── LOG VISIT ────────────────────────────────────────────────────────────
+    
+    async logVisit(reqBody, brokerId) {
+        const { listingId, visitorName, visitorContact, visitorEmail, visitDate, visitType, feedback, notes } = reqBody;
+
+        const listing = await prisma.investmentListing.findUnique({
+            where: { id: listingId },
+        });
+
+        if (!listing) {
+            throw new ApiError(404, "Listing not found");
+        }
+
+        if (listing.status !== 'active' && listing.status !== 'under_negotiation') {
+            throw new ApiError(400, `Cannot log visit for ${listing.status} listing`);
+        }
+
+        const visit = await prisma.propertyVisit.create({
+            data: {
+                listingId,
+                brokerId,
+                visitorName,
+                visitorContact: visitorContact || null,
+                visitorEmail: visitorEmail || null,
+                visitDate: new Date(visitDate),
+                visitType: visitType || 'physical',
+                feedback: feedback || null,
+                notes: notes || null,
+            },
+            include: {
+                listing: {
+                    include: {
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                building: {
+                                    select: {
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        return visit;
+    }
+
+    // ── UPDATE VISIT STATUS ──────────────────────────────────────────────────
+    
+    async updateVisitStatus(visitId, status, notes) {
+        const visit = await prisma.propertyVisit.findUnique({
+            where: { id: visitId },
+        });
+
+        if (!visit) {
+            throw new ApiError(404, "Visit not found");
+        }
+
+        const updated = await prisma.propertyVisit.update({
+            where: { id: visitId },
+            data: { 
+                status,
+                notes: notes || visit.notes
+            },
+        });
+
+        return updated;
+    }
+
+    // ── GET VISITS BY BROKER ─────────────────────────────────────────────────
+    
+    async getVisitsByBroker(brokerId) {
+        const visits = await prisma.propertyVisit.findMany({
+            where: { brokerId },
+            include: {
+                listing: {
+                    include: {
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                building: {
+                                    select: {
+                                        name: true,
+                                        address: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: { visitDate: 'desc' },
+        });
+
+        return visits;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // BIDDING SYSTEM
+    // ══════════════════════════════════════════════════════════════════════════
+
+    // ── SUBMIT BID ────────────────────────────────────────────────────────────
+    
+    async submitBid(reqBody, bidderId) {
+        const {
+            listingId,
+            bidAmount,
+            tokenAmount,
+            bidderName,
+            bidderContact,
+            bidderEmail,
+            message,
+            validUntil,
+        } = reqBody;
+
+        // Check listing exists and is active
+        const listing = await prisma.investmentListing.findUnique({
+            where: { id: listingId },
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                name: true,
+                                adminId: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!listing) {
+            throw new ApiError(404, "Listing not found");
+        }
+
+        if (listing.status !== "active" && listing.status !== "under_negotiation") {
+            throw new ApiError(400, `Cannot bid on ${listing.status} listing`);
+        }
+
+        // Check if bid amount is reasonable (at least 50% of listed price)
+        if (bidAmount < listing.listedPrice * 0.5) {
+            throw new ApiError(400, "Bid amount is too low. Minimum 50% of listed price required");
+        }
+
+        // Create bid
+        const bid = await prisma.bid.create({
+            data: {
+                listingId,
+                bidderId,
+                bidAmount,
+                tokenAmount: tokenAmount || null,
+                bidderName,
+                bidderContact,
+                bidderEmail: bidderEmail || null,
+                message: message || null,
+                validUntil: validUntil ? new Date(validUntil) : null,
+                status: "pending",
+            },
+            include: {
+                listing: {
+                    include: {
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                building: {
+                                    select: {
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                bidder: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+        });
+
+        // Update listing status to "offer_received" if first bid
+        const bidCount = await prisma.bid.count({
+            where: { listingId },
+        });
+
+        if (bidCount === 1) {
+            await prisma.investmentListing.update({
+                where: { id: listingId },
+                data: { status: "offer_received" },
+            });
+        }
+
+        return bid;
+    }
+
+    // ── GET BIDS FOR LISTING ──────────────────────────────────────────────────
+    
+    async getBidsForListing(listingId, userRole, userId) {
+        const listing = await prisma.investmentListing.findUnique({
+            where: { id: listingId },
+            include: {
+                unit: {
+                    include: {
+                        building: {
+                            select: {
+                                adminId: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!listing) {
+            throw new ApiError(404, "Listing not found");
+        }
+
+        // super_admin sees all bids
+        // admin sees bids only for their buildings
+        if (userRole === "admin" && listing.unit.building.adminId !== userId) {
+            throw new ApiError(403, "You can only view bids for your own properties");
+        }
+
+        const bids = await prisma.bid.findMany({
+            where: { listingId },
+            include: {
+                bidder: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+
+        return bids;
+    }
+
+    // ── GET USER'S BIDS ───────────────────────────────────────────────────────
+    
+    async getMyBids(userId) {
+        const bids = await prisma.bid.findMany({
+            where: { bidderId: userId },
+            include: {
+                listing: {
+                    include: {
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                building: {
+                                    select: {
+                                        name: true,
+                                        address: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+
+        return bids;
+    }
+
+    // ── RESPOND TO BID (accept/reject/counter) ────────────────────────────────
+    
+    async respondToBid(bidId, reqBody, userRole, userId) {
+        const { action, counterOfferAmount, counterOfferMessage, adminResponse } = reqBody;
+
+        const bid = await prisma.bid.findUnique({
+            where: { id: bidId },
+            include: {
+                listing: {
+                    include: {
+                        unit: {
+                            include: {
+                                building: {
+                                    select: {
+                                        adminId: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!bid) {
+            throw new ApiError(404, "Bid not found");
+        }
+
+        // Check authorization
+        if (userRole === "admin" && bid.listing.unit.building.adminId !== userId) {
+            throw new ApiError(403, "You can only respond to bids for your own properties");
+        }
+
+        if (bid.status !== "pending" && bid.status !== "countered") {
+            throw new ApiError(400, `Cannot respond to ${bid.status} bid`);
+        }
+
+        const now = new Date();
+        let updateData = {
+            adminResponse: adminResponse || null,
+        };
+
+        if (action === "accept") {
+            updateData.status = "accepted";
+            updateData.acceptedAt = now;
+
+            // Update listing status
+            await prisma.investmentListing.update({
+                where: { id: bid.listingId },
+                data: { status: "contract_signed" },
+            });
+
+            // Reject all other pending bids for this listing
+            await prisma.bid.updateMany({
+                where: {
+                    listingId: bid.listingId,
+                    id: { not: bidId },
+                    status: { in: ["pending", "countered"] },
+                },
+                data: {
+                    status: "rejected",
+                    rejectedAt: now,
+                    adminResponse: "Another bid was accepted",
+                },
+            });
+        } else if (action === "reject") {
+            updateData.status = "rejected";
+            updateData.rejectedAt = now;
+        } else if (action === "counter") {
+            if (!counterOfferAmount) {
+                throw new ApiError(400, "Counter offer amount is required");
+            }
+
+            updateData.status = "countered";
+            updateData.counterOfferAmount = counterOfferAmount;
+            updateData.counterOfferMessage = counterOfferMessage || null;
+
+            // Update listing status
+            await prisma.investmentListing.update({
+                where: { id: bid.listingId },
+                data: { status: "under_negotiation" },
+            });
+        }
+
+        const updatedBid = await prisma.bid.update({
+            where: { id: bidId },
+            data: updateData,
+            include: {
+                listing: {
+                    include: {
+                        unit: {
+                            select: {
+                                unitNumber: true,
+                                building: {
+                                    select: {
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                bidder: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+        });
+
+        return updatedBid;
+    }
+
+    // ── WITHDRAW BID ──────────────────────────────────────────────────────────
+    
+    async withdrawBid(bidId, userId, reason) {
+        const bid = await prisma.bid.findUnique({
+            where: { id: bidId },
+        });
+
+        if (!bid) {
+            throw new ApiError(404, "Bid not found");
+        }
+
+        if (bid.bidderId !== userId) {
+            throw new ApiError(403, "You can only withdraw your own bids");
+        }
+
+        if (bid.status !== "pending" && bid.status !== "countered") {
+            throw new ApiError(400, `Cannot withdraw ${bid.status} bid`);
+        }
+
+        const updatedBid = await prisma.bid.update({
+            where: { id: bidId },
+            data: {
+                status: "withdrawn",
+                adminResponse: reason || "Bid withdrawn by bidder",
+            },
+        });
+
+        return updatedBid;
+    }
+}
+
+module.exports = new InvestmentService();

@@ -1,0 +1,4396 @@
+{
+  "info": {
+    "_postman_id": "real-estate-api-2024",
+    "name": "Real Estate API",
+    "description": "Complete API collection for Real Estate Portal with Authentication, Listings, Messaging, Payments, and WebSocket support",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},																	
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5001",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "conversationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "listingId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('userId', response.data.user.id);",
+									"    console.log('User registered:', response.data.user.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!@#\",\n  \"role\": \"buyer\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user (buyer, seller, or agent)"
+					},
+					"response": []
+				},
+				{
+					"name": "Register Admin (Hidden)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/register-admin",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register-admin"
+							]
+						},
+						"description": "Register admin or super_admin user (hidden endpoint)",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@platform.com\",\n  \"password\": \"SecureAdminPass123!@#\",\n  \"role\": \"admin\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Email",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/verify-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-otp"
+							]
+						},
+						"description": "Verify email with OTP (check server logs for OTP)"
+					},
+					"response": []
+				},
+				{
+					"name": "Resend OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/resend-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"resend-otp"
+							]
+						},
+						"description": "Resend OTP for email verification (registration)"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!@#\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login and receive JWT tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Request password reset OTP"
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Reset OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/resend-reset-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"resend-reset-otp"
+							]
+						},
+						"description": "Resend password reset OTP to email"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Reset OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/verify-reset-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-reset-otp"
+							]
+						},
+						"description": "Verify password reset OTP before resetting password"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewSecurePass123!@#\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset-password"
+							]
+						},
+						"description": "Reset password with verified OTP"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout current user (requires access token)"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"OldPass123!@#\",\n  \"newPassword\": \"NewSecurePass456!@#\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/change-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"change-password"
+							]
+						},
+						"description": "Change password for authenticated user (requires access token)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Get current authenticated user profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete My Account",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Delete current user account permanently"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Role (Super Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/assign-role",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"assign-role"
+							]
+						},
+						"description": "Assign role to user (super_admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/roles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"roles"
+							]
+						},
+						"description": "Get all available roles in the system"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Role by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/user-role/:userId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"user-role",
+								":userId"
+							]
+						},
+						"description": "Get user role by user ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users (Super Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"users"
+							]
+						},
+						"description": "Get all users with their roles (super_admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 Profile",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Updated\",\n  \"phone\": \"+923001234567\",\n  \"agencyName\": \"Prime Properties\",\n  \"officePhone\": \"+924212345678\",\n  \"whatsappNumber\": \"+923001234567\",\n  \"officeAddress\": \"123 Main Street, Lahore\",\n  \"officeHours\": \"9 AM - 6 PM\",\n  \"facebookUrl\": \"https://facebook.com/primeproperties\",\n  \"instagramHandle\": \"@primeproperties\",\n  \"twitterHandle\": \"@primeproperties\",\n  \"linkedinUrl\": \"https://linkedin.com/in/johndoe\",\n  \"websiteUrl\": \"https://primeproperties.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile"
+							]
+						},
+						"description": "Update profile information (name, phone, social media links)"
+					},
+					"response": []
+				},
+				{
+					"name": "Request Email Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newEmail\": \"newemail@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile/request-email-update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile",
+								"request-email-update"
+							]
+						},
+						"description": "Request email update - sends OTP to new email"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Email Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newEmail\": \"newemail@example.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile/verify-email-update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile",
+								"verify-email-update"
+							]
+						},
+						"description": "Verify and complete email update with OTP"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"SecurePass123!@#\",\n  \"newPassword\": \"NewSecurePass123!@#\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile/change-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile",
+								"change-password"
+							]
+						},
+						"description": "Change password"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile/statistics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile",
+								"statistics"
+							]
+						},
+						"description": "Get user dashboard statistics (listings, applications, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/profile/:userId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"profile",
+								":userId"
+							]
+						},
+						"description": "Get user profile by ID (admin or viewing self)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏠 Property Listings",
+			"item": [
+				{
+					"name": "Create Listing",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('listingId', response.data.id);",
+									"    console.log('Listing created:', response.data.reference);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Beautiful 3 Bedroom House in DHA\",\n  \"purpose\": \"sale\",\n  \"propertyType\": \"house\",\n  \"city\": \"Lahore\",\n  \"location\": \"DHA Phase 5\",\n  \"address\": \"Block Z, DHA Phase 5, Lahore\",\n  \"price\": 25000000,\n  \"currency\": \"PKR\",\n  \"area\": 10,\n  \"areaUnit\": \"marla\",\n  \"bedrooms\": 3,\n  \"bathrooms\": 3,\n  \"furnishing\": \"semi_furnished\",\n  \"description\": \"Spacious 10 marla house with modern amenities\",\n  \"amenities\": [\"parking\", \"garden\", \"security\", \"electricity_backup\"],\n  \"photos\": [\"https://example.com/photo1.jpg\"],\n  \"latitude\": 31.4697,\n  \"longitude\": 74.4050\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings?purpose=sale&city=Lahore&propertyType=house&minPrice=10000000&maxPrice=50000000&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings"
+							],
+							"query": [
+								{
+									"key": "purpose",
+									"value": "sale"
+								},
+								{
+									"key": "city",
+									"value": "Lahore"
+								},
+								{
+									"key": "propertyType",
+									"value": "house"
+								},
+								{
+									"key": "minPrice",
+									"value": "10000000"
+								},
+								{
+									"key": "maxPrice",
+									"value": "50000000"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Listing by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Listing",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Title\",\n  \"price\": 26000000,\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Listing",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/mine",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"mine"
+							]
+						},
+						"description": "Get all my property listings"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Review Queue (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/review-queue",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"review-queue"
+							]
+						},
+						"description": "Get listings pending review (admin permission required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Property Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "documentType",
+									"value": "ownership_deed",
+									"type": "text"
+								},
+								{
+									"key": "document",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}",
+								"documents"
+							]
+						},
+						"description": "Upload property document (ownership_deed, noc, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Property Document",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}",
+								"documents",
+								":documentId"
+							]
+						},
+						"description": "Remove property document"
+					},
+					"response": []
+				},
+				{
+					"name": "Download Property Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/documents/:documentId/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}",
+								"documents",
+								":documentId",
+								"download"
+							]
+						},
+						"description": "Get signed URL to download property document"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Listing for Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/submit-review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}",
+								"submit-review"
+							]
+						},
+						"description": "Submit listing for admin review"
+					},
+					"response": []
+				},
+				{
+					"name": "Review Listing (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"rejectionReason\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}",
+								"review"
+							]
+						},
+						"description": "Review listing - approve or reject (admin permission required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Publish Listing",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/listings/{{listingId}}/publish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"listings",
+								"{{listingId}}",
+								"publish"
+							]
+						},
+						"description": "Publish approved listing (agent/seller)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💬 Messaging (Real-time)",
+			"item": [
+				{
+					"name": "Start Conversation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('conversationId', response.data.id);",
+									"    console.log('Conversation started:', response.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientId\": \"recipient-user-id-here\",\n  \"listingId\": \"{{listingId}}\",\n  \"subject\": \"Inquiry about property\",\n  \"message\": \"Hello, I'm interested in this property. Can we discuss?\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations"
+							]
+						},
+						"description": "Start a new conversation with another user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Conversations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations"
+							]
+						},
+						"description": "Get all conversations for current user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conversation Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"body\": \"This is a test message sent via API. WebSocket will broadcast it to all participants!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages"
+							]
+						},
+						"description": "Send a message (triggers real-time WebSocket broadcast)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages?page=1&limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get messages with pagination. Auto-marks received messages as read."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Individual Message as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/{{messageId}}/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"{{messageId}}",
+								"read"
+							]
+						},
+						"description": "Manually mark a specific message as read"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Message Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/{{messageId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"{{messageId}}",
+								"status"
+							]
+						},
+						"description": "Get full message status"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Conversation as Read",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/{{messageId}}/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"{{messageId}}",
+								"read"
+							]
+						},
+						"description": "Manually mark a specific message as read. Returns minimal response with messageId, readAt, and status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Message Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/{{messageId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"{{messageId}}",
+								"status"
+							]
+						},
+						"description": "Get full message status including read/delivered/sent timestamps, message details, and conversation info."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Conversation as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/{{messageId}}/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"{{messageId}}",
+								"read"
+							]
+						},
+						"description": "Manually mark a specific message as read. Returns minimal response with messageId, readAt, and status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Message Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/{{messageId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"{{messageId}}",
+								"status"
+							]
+						},
+						"description": "Get full message status including read/delivered/sent timestamps, message details, and conversation info."
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Conversation as Read",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"read"
+							]
+						},
+						"description": "Mark conversation as read (triggers WebSocket event)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get WebSocket Stats (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/unread/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"unread",
+								"count"
+							]
+						},
+						"description": "Get total unread message count"
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Message",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"body\": \"This is the edited message content\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/message-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"message-id-here"
+							]
+						},
+						"description": "Edit a message (triggers WebSocket update)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Message",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/messages/message-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"messages",
+								"message-id-here"
+							]
+						},
+						"description": "Delete a message (triggers WebSocket event)"
+					},
+					"response": []
+				},
+				{
+					"name": "Close Conversation",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/conversations/{{conversationId}}/close",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"conversations",
+								"{{conversationId}}",
+								"close"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get WebSocket Stats (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/socket/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"socket",
+								"stats"
+							]
+						},
+						"description": "Get WebSocket connection statistics (Admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💰 Payments (Stripe)",
+			"item": [
+				{
+					"name": "Get Pricing",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"pricing"
+							]
+						},
+						"description": "Get all subscription plans and pricing"
+					},
+					"response": []
+				},
+				{
+					"name": "Subscribe to Plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"plan\": \"gold\",\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/subscription",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"subscription"
+							]
+						},
+						"description": "Subscribe to a plan (basic, silver, gold, platinum)"
+					},
+					"response": []
+				},
+				{
+					"name": "Promote Listing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"listingId\": \"{{listingId}}\",\n  \"promotionType\": \"featured\",\n  \"duration\": 30,\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/promotion",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"promotion"
+							]
+						},
+						"description": "Promote a listing (featured, urgent, hot_deal)"
+					},
+					"response": []
+				},
+				{
+					"name": "Purchase Leads",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leadCount\": 10,\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/leads",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"leads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Payments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/my-payments?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"my-payments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/payment-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"payment-id-here"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invoice",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/payment-id-here/invoice",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"payment-id-here",
+								"invoice"
+							]
+						},
+						"description": "Download PDF invoice"
+					},
+					"response": []
+				},
+				{
+					"name": "Stripe Webhook",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "stripe-signature",
+								"value": "webhook-signature-here"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/webhooks/stripe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"webhooks",
+								"stripe"
+							]
+						},
+						"description": "Stripe webhook endpoint (called by Stripe automatically)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "✅ Seller Verification",
+			"item": [
+				{
+					"name": "Submit Seller Verification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sellerType\": \"owner\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seller-verification",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seller-verification"
+							]
+						},
+						"description": "Create or update seller verification draft"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Seller Verification",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seller-verification/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seller-verification",
+								"me"
+							]
+						},
+						"description": "Get my seller verification status and details"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Seller Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "documentType",
+									"value": "identity_front",
+									"type": "text"
+								},
+								{
+									"key": "document",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seller-verification/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seller-verification",
+								"documents"
+							]
+						},
+						"description": "Upload verification document (identity_front, identity_back, proof_of_ownership)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Seller Document",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seller-verification/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seller-verification",
+								"documents",
+								":documentId"
+							]
+						},
+						"description": "Remove a verification document"
+					},
+					"response": []
+				},
+				{
+					"name": "Download Seller Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seller-verification/documents/:documentId/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seller-verification",
+								"documents",
+								":documentId",
+								"download"
+							]
+						},
+						"description": "Get signed URL to download verification document"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Seller Verification for Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seller-verification/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"seller-verification",
+								"submit"
+							]
+						},
+						"description": "Submit seller verification for admin review"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔧 Admin - Seller Verifications",
+			"item": [
+				{
+					"name": "Get All Seller Verifications (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/seller-verifications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"seller-verifications"
+							]
+						},
+						"description": "Get all seller verification applications for admin review"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Seller Verification Details (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/seller-verifications/:verificationId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"seller-verifications",
+								":verificationId"
+							]
+						},
+						"description": "Get single seller verification details with property listings"
+					},
+					"response": []
+				},
+				{
+					"name": "Review Seller Verification (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"rejectionReason\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/seller-verifications/:verificationId/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"seller-verifications",
+								":verificationId",
+								"review"
+							]
+						},
+						"description": "Approve or reject seller verification application"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏢 Agent Verification",
+			"item": [
+				{
+					"name": "Submit Agent Verification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"agencyName\": \"Prime Properties\",\n  \"licenseNumber\": \"REA-12345\",\n  \"licenseExpiresAt\": \"2025-12-31T00:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agent-verification",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agent-verification"
+							]
+						},
+						"description": "Create or update agent verification draft"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Agent Verification",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agent-verification/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agent-verification",
+								"me"
+							]
+						},
+						"description": "Get my agent verification status and details"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Agent Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "documentType",
+									"value": "broker_license",
+									"type": "text"
+								},
+								{
+									"key": "document",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agent-verification/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agent-verification",
+								"documents"
+							]
+						},
+						"description": "Upload verification document (broker_license, identity_front, identity_back)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Agent Document",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agent-verification/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agent-verification",
+								"documents",
+								":documentId"
+							]
+						},
+						"description": "Remove a verification document"
+					},
+					"response": []
+				},
+				{
+					"name": "Download Agent Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agent-verification/documents/:documentId/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agent-verification",
+								"documents",
+								":documentId",
+								"download"
+							]
+						},
+						"description": "Get signed URL to download verification document"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Agent Verification for Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agent-verification/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agent-verification",
+								"submit"
+							]
+						},
+						"description": "Submit agent verification for admin review"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔧 Admin - Agent Verifications",
+			"item": [
+				{
+					"name": "Get All Agent Verifications (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/agent-verifications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"agent-verifications"
+							]
+						},
+						"description": "Get all agent verification applications for admin review"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agent Verification Details (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/agent-verifications/:verificationId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"agent-verifications",
+								":verificationId"
+							]
+						},
+						"description": "Get single agent verification details with property listings"
+					},
+					"response": []
+				},
+				{
+					"name": "Review Agent Verification (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"rejectionReason\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/agent-verifications/:verificationId/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"admin",
+								"agent-verifications",
+								":verificationId",
+								"review"
+							]
+						},
+						"description": "Approve or reject agent verification application"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📧 Inquiries & Tours",
+			"item": [
+				{
+					"name": "1️⃣ Buyer - Send Inquiry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inquiry created with status=new', function() {",
+									"    pm.expect(pm.response.code).to.equal(201);",
+									"    const data = pm.response.json().data;",
+									"    pm.expect(data.status).to.equal('new');",
+									"    pm.collectionVariables.set('inquiryId', data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Hi! I'm very interested in this property. Can I get more details?\",\n  \"phone\": \"+923001234567\",\n  \"email\": \"buyer@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inquiries/listings/{{listingId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inquiries", "listings", "{{listingId}}"]
+						},
+						"description": "🔵 BUYER: Send inquiry about a listing\\n\\nRole: Buyer/Tenant\\nInitial Status: new\\nSaves inquiryId to {{inquiryId}} variable\\n\\nRequired: message (min 10 chars)\\nOptional: phone, email"
+					},
+					"response": []
+				},
+				{
+					"name": "2️⃣ Owner - View Received Inquiries",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inquiries fetched - status auto-marked as contacted', function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    const inquiries = pm.response.json().data;",
+									"    if (inquiries.length > 0) {",
+									"        console.log('Inquiry statuses:', inquiries.map(i => i.status).join(', '));",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inquiries/received",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inquiries", "received"]
+						},
+						"description": "🔴 OWNER: View all inquiries on your listings\\n\\nRole: Listing Owner\\nStatus Change: new → contacted (AUTO-MARKED when owner views)\\n\\nAny 'new' inquiries automatically change to 'contacted' to show owner has reviewed them."
+					},
+					"response": []
+				},
+				{
+					"name": "3️⃣ Buyer - View My Inquiries",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('My inquiries fetched', function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    const inquiries = pm.response.json().data;",
+									"    const validStatuses = ['new', 'contacted', 'closed'];",
+									"    inquiries.forEach(i => {",
+									"        pm.expect(validStatuses).to.include(i.status);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inquiries/mine",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inquiries", "mine"]
+						},
+						"description": "🔵 BUYER: View all your inquiries\\n\\nRole: Buyer/Tenant\\n\\nStatus meanings:\\n- new: Owner hasn't seen yet\\n- contacted: Owner has seen/responded\\n- closed: Inquiry finished"
+					},
+					"response": []
+				},
+				{
+					"name": "4️⃣ Owner - Update Inquiry Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inquiry status updated', function() {",
+									"    pm.expect([200, 400]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"contacted\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inquiries/{{inquiryId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inquiries", "{{inquiryId}}", "status"]
+						},
+						"description": "🔴 OWNER: Update inquiry status (Respond/Close)\\n\\nRole: Listing Owner\\n\\nStatus options:\\n- contacted: Mark as responded to buyer\\n- closed: Close inquiry"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "❤️ Saved Listings",
+			"item": [
+				{
+					"name": "Save Listing",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"listingId\": \"{{listingId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/saved-listings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"saved-listings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Saved Listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/saved-listings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"saved-listings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Saved Listing",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/saved-listings/{{listingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"saved-listings",
+								"{{listingId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔔 Notifications",
+			"item": [
+				{
+					"name": "Get My Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get paginated notifications with filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/unread",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								"unread"
+							]
+						},
+						"description": "Get count of unread notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/:id/read",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								":id",
+								"read"
+							]
+						},
+						"description": "Mark a single notification as read"
+					},
+					"response": []
+				},
+				{
+					"name": "Mark All as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/read-all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								"read-all"
+							]
+						},
+						"description": "Mark all notifications as read"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								":id"
+							]
+						},
+						"description": "Delete a notification"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification Preferences",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/preferences",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								"preferences"
+							]
+						},
+						"description": "Get notification preferences"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Notification Preferences",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emailEnabled\": true,\n  \"emailListings\": true,\n  \"emailInquiries\": true,\n  \"emailTours\": true,\n  \"emailSecurity\": true,\n  \"smsEnabled\": false,\n  \"inAppEnabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/preferences",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notifications",
+								"preferences"
+							]
+						},
+						"description": "Update notification preferences"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🚫 User Blocking",
+			"item": [
+				{
+					"name": "Block User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/blocks/user-id-to-block",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"blocks",
+								"user-id-to-block"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unblock User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/blocks/user-id-to-unblock",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"blocks",
+								"user-id-to-unblock"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏥 Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if server is running"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📋 Tenant Applications",
+			"item": [
+				{
+					"name": "Submit Rental Application",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications"
+							]
+						},
+						"description": "Submit new rental application",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"listingId\": \"{{listingId}}\",\n  \"monthlyIncome\": 5000,\n  \"employmentStatus\": \"employed\",\n  \"moveInDate\": \"2026-10-01\",\n  \"references\": []\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Applications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications"
+							]
+						},
+						"description": "Get own tenant applications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Application Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications",
+								":id"
+							]
+						},
+						"description": "Get specific application details"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Application",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications",
+								":id"
+							]
+						},
+						"description": "Update application details",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"monthlyIncome\": 5500\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit for Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications/:id/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications",
+								":id",
+								"submit"
+							]
+						},
+						"description": "Submit application for landlord review"
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Application",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications",
+								":id"
+							]
+						},
+						"description": "Withdraw tenant application"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Received Applications (Landlord)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications/received",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications",
+								"received"
+							]
+						},
+						"description": "Landlord: Get applications on own listings"
+					},
+					"response": []
+				},
+				{
+					"name": "Review Application (Landlord)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-applications/:id/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-applications",
+								":id",
+								"review"
+							]
+						},
+						"description": "Landlord: Approve or reject application",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"approved\",\n  \"reviewNotes\": \"Approved for tenancy\"\n}"
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💰 Purchase Applications",
+			"item": [
+				{
+					"name": "Submit Purchase Application",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								"submit"
+							]
+						},
+						"description": "Submit new purchase application",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"listingId\": \"{{listingId}}\",\n  \"offerPrice\": 250000,\n  \"downPayment\": 50000,\n  \"financingType\": \"mortgage\",\n  \"proposedClosingDate\": \"2026-11-01\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Applications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/my-applications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								"my-applications"
+							]
+						},
+						"description": "Get own purchase applications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Application by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":id"
+							]
+						},
+						"description": "Get specific application details"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Application",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":id"
+							]
+						},
+						"description": "Update application details",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"offerPrice\": 260000\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Application",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:id/withdraw",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":id",
+								"withdraw"
+							]
+						},
+						"description": "Withdraw purchase application"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Documents",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:id/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":id",
+								"documents"
+							]
+						},
+						"description": "Upload supporting documents (use form-data)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:applicationId/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":applicationId",
+								"documents",
+								":documentId"
+							]
+						},
+						"description": "Remove uploaded document"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Applications (Admin/Seller)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications"
+							]
+						},
+						"description": "Admin/Seller: Get applications on own listings"
+					},
+					"response": []
+				},
+				{
+					"name": "Review Application (Seller)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:id/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":id",
+								"review"
+							]
+						},
+						"description": "Seller: Review purchase application",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"accepted\",\n  \"reviewNotes\": \"Offer accepted\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Approve & Create Agreement (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-applications/:id/approve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-applications",
+								":id",
+								"approve"
+							]
+						},
+						"description": "Admin: Approve application and create agreement",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"agreementTerms\": {\n    \"totalPrice\": 260000,\n    \"downPayment\": 50000\n  }\n}"
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📄 Purchase Agreements",
+			"item": [
+				{
+					"name": "Get My Agreement",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-agreements/my-agreement",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-agreements",
+								"my-agreement"
+							]
+						},
+						"description": "Buyer: Get own purchase agreement"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agreement by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-agreements/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-agreements",
+								":id"
+							]
+						},
+						"description": "Get specific agreement details"
+					},
+					"response": []
+				},
+				{
+					"name": "Record Installment Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-agreements/installments/:installmentId/pay",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-agreements",
+								"installments",
+								":installmentId",
+								"pay"
+							]
+						},
+						"description": "Record installment payment",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 10000,\n  \"paymentMethod\": \"bank_transfer\",\n  \"transactionReference\": \"TXN123456\"\n}"
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Agreements (Admin/Seller)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-agreements",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-agreements"
+							]
+						},
+						"description": "Admin/Seller: Get all purchase agreements"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Agreement (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/purchase-agreements/:id/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-agreements",
+								":id",
+								"cancel"
+							]
+						},
+						"description": "Admin: Cancel purchase agreement",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Buyer defaulted on payment\"\n}"
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": " Tours",
+			"item": [
+				{
+					"name": "1️⃣ Buyer - Request Tour",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const futureDate = new Date();",
+									"futureDate.setHours(futureDate.getHours() + 24);",
+									"pm.environment.set('scheduledAt', futureDate.toISOString());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Tour request created with status=requested', function() {",
+									"    pm.expect(pm.response.code).to.equal(201);",
+									"    const data = pm.response.json().data;",
+									"    pm.expect(data.status).to.equal('requested');",
+									"    pm.collectionVariables.set('tourId', data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"scheduledAt\": \"{{scheduledAt}}\",\n  \"notes\": \"I'm very interested in viewing this property!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tours/listings/{{listingId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tours", "listings", "{{listingId}}"]
+						},
+						"description": "🔵 BUYER: Request tour for a listing\\n\\nRole: Buyer/Tenant\\nInitial Status: requested\\n\\nSaves tourId to {{tourId}} variable for next requests.\\n\\nResponse includes tour details with status='requested'"
+					},
+					"response": []
+				},
+				{
+					"name": "2️⃣ Owner - View Received Tour Requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Tours fetched - status auto-marked as pending', function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    const tours = pm.response.json().data;",
+									"    if (tours.length > 0) {",
+									"        console.log('Tour statuses:', tours.map(t => t.status).join(', '));",
+									"        pm.expect(tours[0]).to.have.property('buyer');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tours/received",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tours", "received"]
+						},
+						"description": "🔴 OWNER: View all tour requests on your listings\\n\\nRole: Listing Owner\\nStatus Change: requested → pending (AUTO-MARKED when owner views)\\n\\nAny 'requested' tours automatically change to 'pending' to show owner has reviewed them.\\n\\nReturns array of tours with buyer details"
+					},
+					"response": []
+				},
+				{
+					"name": "3️⃣ Buyer - View My Tour Requests",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('My tours fetched with status info', function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"    const tours = pm.response.json().data;",
+									"    const validStatuses = ['requested', 'pending', 'confirmed', 'rejected', 'completed'];",
+									"    tours.forEach(t => {",
+									"        pm.expect(validStatuses).to.include(t.status);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tours/mine",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tours", "mine"]
+						},
+						"description": "🔵 BUYER: View all your tour requests\\n\\nRole: Buyer/Tenant\\n\\nStatus meanings:\\n- requested: Waiting for owner to view\\n- pending: Owner viewed, deciding\\n- confirmed: ✅ APPROVED - You can visit!\\n- rejected: ❌ Owner declined\\n- completed: Tour finished\\n- cancelled: Cancelled\\n- no_show: You didn't show up"
+					},
+					"response": []
+				},
+				{
+					"name": "4️⃣ Owner - Update Tour Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Tour status updated successfully', function() {",
+									"    pm.expect([200, 400]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"confirmed\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tours/{{tourId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tours", "{{tourId}}", "status"]
+						},
+						"description": "🔴 OWNER: Update tour status (Confirm/Reject/Complete)\\n\\nRole: Listing Owner\\n\\nStatus options:\\n- confirmed: Approve tour (buyer can visit)\\n- rejected: Decline tour\\n- completed: Mark tour as done\\n- cancelled: Cancel tour\\n- no_show: Buyer didn't show\\n\\nValidation: Can only confirm 'pending'/'requested' tours. Can only complete 'confirmed' tours."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏢 Agents (Public)",
+			"item": [
+				{
+					"name": "Get All Agents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agents"
+							]
+						},
+						"description": "Get list of all verified agents"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Agent Profile by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/agents/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"agents",
+								":id"
+							]
+						},
+						"description": "Get agent profile by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Audit Logs",
+			"item": [
+				{
+					"name": "Get All Audit Logs (Super Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs?action=login&entity=user&success=true&startDate=2026-01-01&endDate=2026-12-31&limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "login"
+								},
+								{
+									"key": "entity",
+									"value": "user"
+								},
+								{
+									"key": "success",
+									"value": "true"
+								},
+								{
+									"key": "startDate",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-12-31"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get all audit logs with filtering (super_admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Activity Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/me?limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"me"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get your own activity logs"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Logs (Super Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/user/:userId?limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"user",
+								":userId"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get activity logs for a specific user (super_admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Entity History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/entity/listing/listing-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"entity",
+								"listing",
+								"listing-id-here"
+							]
+						},
+						"description": "Get audit history for a specific entity"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Logs by Action",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/action/login?limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"action",
+								"login"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get logs filtered by action type"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Failed Operations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/failed?limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"failed"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get failed operations (security monitoring)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Authentication Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/auth-events?limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"auth-events"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get authentication events"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/search?keyword=login&userId=user-id-here&action=login&success=true&startDate=2026-01-01&limit=50&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"search"
+							],
+							"query": [
+								{
+									"key": "keyword",
+									"value": "login"
+								},
+								{
+									"key": "userId",
+									"value": "user-id-here"
+								},
+								{
+									"key": "action",
+									"value": "login"
+								},
+								{
+									"key": "success",
+									"value": "true"
+								},
+								{
+									"key": "startDate",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Search audit logs with multiple filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit-logs/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit-logs",
+								"stats"
+							]
+						},
+						"description": "Get audit statistics and summary"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": " Tenant Assignment",
+			"item": [
+				{
+					"name": "Get My Current Lease",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/my-lease",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"my-lease"
+							]
+						},
+						"description": "Get current lease for tenant user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tenant Assignments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-assignments?listingId=listing-id-here&tenantId=tenant-id-here&status=active&limit=20&offset=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-assignments"
+							],
+							"query": [
+								{
+									"key": "listingId",
+									"value": "listing-id-here"
+								},
+								{
+									"key": "tenantId",
+									"value": "tenant-id-here"
+								},
+								{
+									"key": "status",
+									"value": "active"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get all tenant assignments (admin/landlord)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignment by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-assignments/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-assignments",
+								":id"
+							]
+						},
+						"description": "Get specific tenant assignment details"
+					},
+					"response": []
+				},
+				{
+					"name": "Terminate Lease",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Tenant violated lease terms\",\n  \"effectiveDate\": \"2026-10-01\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tenant-assignments/:id/terminate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"tenant-assignments",
+								":id",
+								"terminate"
+							]
+						},
+						"description": "Terminate lease (admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💰 Payments Admin",
+			"item": [
+				{
+					"name": "Calculate Success Fee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"listingId\": \"{{listingId}}\",\n  \"salePrice\": 25000000,\n  \"agentCommissionRate\": 2.5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/calculate-success-fee",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"calculate-success-fee"
+							]
+						},
+						"description": "Calculate success fee for property sale"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Listing Availability",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/listing-availability/{{listingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"listing-availability",
+								"{{listingId}}"
+							]
+						},
+						"description": "Check if listing is available for promotion"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Invoices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/invoices?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"invoices"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get all invoices"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Statistics (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/admin/statistics?startDate=2026-01-01&endDate=2026-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"admin",
+								"statistics"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-12-31"
+								}
+							]
+						},
+						"description": "Get payment statistics (admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Process Refund",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"paymentId\": \"payment-id-here\",\n  \"amount\": 5000,\n  \"reason\": \"Buyer requested refund\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/admin/refund",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"admin",
+								"refund"
+							]
+						},
+						"description": "Process refund (admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Refund Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/admin/refund/:paymentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"admin",
+								"refund",
+								":paymentId"
+							]
+						},
+						"description": "Get refund details (admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Refunds",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/admin/refunds?page=1&limit=20&status=pending",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"admin",
+								"refunds"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "status",
+									"value": "pending"
+								}
+							]
+						},
+						"description": "List all refunds (admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Refund Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/admin/refund-statistics?startDate=2026-01-01&endDate=2026-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"admin",
+								"refund-statistics"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2026-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-12-31"
+								}
+							]
+						},
+						"description": "Get refund statistics (admin)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": " Webhooks",
+			"item": [
+				{
+					"name": "Stripe Webhook",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "stripe-signature",
+								"value": "whsec_1234567890"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"evt_123456\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_123456\",\n      \"amount\": 25000000,\n      \"currency\": \"pkr\",\n      \"status\": \"succeeded\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/webhooks/stripe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"webhooks",
+								"stripe"
+							]
+						},
+						"description": "Stripe webhook endpoint (called by Stripe automatically)"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Webhook (Dev Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventType\": \"payment_intent.succeeded\",\n  \"paymentIntentId\": \"pi_test_123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/webhooks/test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"webhooks",
+								"test"
+							]
+						},
+						"description": "Test webhook endpoint (development only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Webhook Event Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/webhooks/events/event-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"webhooks",
+								"events",
+								"event-id-here"
+							]
+						},
+						"description": "Get webhook event processing status"
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Failed Webhook",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/webhooks/retry/event-id-here",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"webhooks",
+								"retry",
+								"event-id-here"
+							]
+						},
+						"description": "Retry failed webhook (admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Webhook Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/webhooks/events?page=1&limit=20&processed=false",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"webhooks",
+								"events"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "processed",
+									"value": "false"
+								}
+							]
+						},
+						"description": "List webhook events (admin)"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

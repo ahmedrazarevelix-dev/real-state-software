@@ -1,0 +1,86 @@
+version: '3.8'
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Development Docker Compose - With hot reload & debugging
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ════════════════════════════════════════════════════════════════════════════
+  # PostgreSQL Database (Development)
+  # ════════════════════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:16-alpine
+    container_name: bms-postgres-dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - bms-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # BMS Application (Development with hot reload)
+  # ════════════════════════════════════════════════════════════════════════════
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bms-app-dev
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+      - "9229:9229"  # Node.js debugger port
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/auth_db?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bms-network-dev
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    command: npm run dev
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # Prisma Studio (Database GUI)
+  # ════════════════════════════════════════════════════════════════════════════
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bms-prisma-studio
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/auth_db?schema=public
+    depends_on:
+      - postgres
+    networks:
+      - bms-network-dev
+    volumes:
+      - .:/app
+    command: npx prisma studio --port 5555 --browser none
+
+networks:
+  bms-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_dev_data:
+    driver: local

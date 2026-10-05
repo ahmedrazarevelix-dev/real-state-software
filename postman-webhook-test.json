@@ -1,0 +1,24 @@
+{
+  "id": "evt_postman_test_123",
+  "type": "payment_intent.succeeded",
+  "data": {
+    "object": {
+      "id": "pi_3UMxfpDNC9xyXtKX1s8xeigU",
+      "object": "payment_intent",
+      "amount": 500000,
+      "currency": "pkr",
+      "status": "succeeded",
+      "metadata": {
+        "userId": "cm2s6h88r0001vnfqjjm6d98g",
+        "paymentType": "subscription",
+        "subscriptionType": "seller",
+        "plan": "premium",
+        "listingLimit": "10",
+        "featuredSlots": "1"
+      },
+      "created": 1696435200,
+      "payment_method": "pm_card_visa"
+    }
+  },
+  "created": 1696435200
+}
